@@ -5,9 +5,9 @@ import java.text.MessageFormat;
 /**
  * Created by arodrigues on 13/08/2017.
  */
-public class AccountNotFoundExceptionSimple extends SimpleMoneyTransferException {
+public class ResourceNotFoundException extends SimpleMoneyTransferException {
 
-    public AccountNotFoundExceptionSimple(Long accountNumber) {
-        super(MessageFormat.format("Account with number {1} does not exists!", accountNumber));
+    public ResourceNotFoundException(String resourceName, String resourceParameterName, Object resource) {
+        super(MessageFormat.format("{1} with {2} equal to {1} does not exist!", resourceName, resourceParameterName, resource));
     }
 }

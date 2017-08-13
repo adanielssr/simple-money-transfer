@@ -88,6 +88,9 @@ public class AccountService {
         if (accountNumber == null) {
             throw new SimpleMoneyTransferException("Account number needed!");
         }
-        mapAccountNumberToAccount.compute(accountNumber, operation);
+        if (operation == null) {
+            throw new SimpleMoneyTransferException("Operation needed!");
+        }
+        mapAccountNumberToAccount.computeIfPresent(accountNumber, operation);
     }
 }
