@@ -25,8 +25,17 @@ public class TransferService {
 
     private final AccountService accountService;
 
-    public TransferService(AccountService accountService){
+    public TransferService(AccountService accountService) {
         this.accountService = accountService;
+    }
+
+    /**
+     * Access modifier to default for testing purposes
+     *
+     * @return the map of Transfers
+     */
+    ConcurrentMap<Long, Transfer> getMapTransferNumberToTransfer() {
+        return mapTransferNumberToTransfer;
     }
 
     /**
@@ -34,7 +43,7 @@ public class TransferService {
      *
      * @param transfer the transfer
      * @return the created transfer
-     * @throws SimpleMoneyTransferException if the input transfer is not valid
+     * @throws SimpleMoneyTransferException                                                               if the input transfer is not valid
      * @throws test.adanielssr.simple.money.transfer.business.service.exceptions.AccountNotFoundException if some of the given accountNumber does not exist
      */
     public Transfer createAndPerformTransfer(Transfer transfer) {
@@ -70,8 +79,8 @@ public class TransferService {
     private void updateToAccount(Account transferTo, BigDecimal transferAmount) {
         BiFunction<Long, Account, Account> addOperation = (aAccountNumber, existing) -> {
             BigDecimal currentFromBalance = new BigDecimal(existing.getBalance());
-            BigDecimal fromAccountResult = currentFromBalance.add(transferAmount).setScale(DEFAULT_SCALE,
-                    RoundingMode.HALF_UP);
+            BigDecimal fromAccountResult = currentFromBalance.add(transferAmount)
+                    .setScale(DEFAULT_SCALE, RoundingMode.HALF_UP);
             existing.setBalance(fromAccountResult.doubleValue());
 
             return existing;
@@ -83,8 +92,8 @@ public class TransferService {
     private void updateFromAccount(Account transferFrom, BigDecimal transferAmount) {
         BiFunction<Long, Account, Account> substractOperation = (aAccountNumber, existing) -> {
             BigDecimal currentFromBalance = new BigDecimal(existing.getBalance());
-            BigDecimal fromAccountResult = currentFromBalance.subtract(transferAmount).setScale(DEFAULT_SCALE,
-                    RoundingMode.HALF_UP);
+            BigDecimal fromAccountResult = currentFromBalance.subtract(transferAmount)
+                    .setScale(DEFAULT_SCALE, RoundingMode.HALF_UP);
 
             existing.setBalance(fromAccountResult.doubleValue());
 
@@ -103,8 +112,14 @@ public class TransferService {
         if (transfer.getAccountNumberTo() == null) {
             throw new SimpleMoneyTransferException("accountNumberTo needed!");
         }
+        if (transfer.getAccountNumberFrom().longValue() == transfer.getAccountNumberTo().longValue()) {
+            throw new SimpleMoneyTransferException("Cannot perform transfer in the same account!");
+        }
         if (transfer.getAmount() == null) {
             throw new SimpleMoneyTransferException("amount needed!");
+        }
+        if (transfer.getAmount() <= 0.0D) {
+            throw new SimpleMoneyTransferException("amount must be greater than 0.0!");
         }
     }
 }
