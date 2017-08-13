@@ -17,6 +17,9 @@
         <lombok.version>1.16.16</lombok.version>
         <vertx.version>3.0.0</vertx.version>
         <maven.shade.plugin.version>2.3</maven.shade.plugin.version>
+
+        <junit.version>4.12</junit.version>
+        <mockito.all.version>1.10.19</mockito.all.version>
     </properties>
 
     <modules>
@@ -42,7 +45,13 @@
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.12</version>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-all</artifactId>
+                <version>${mockito.all.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

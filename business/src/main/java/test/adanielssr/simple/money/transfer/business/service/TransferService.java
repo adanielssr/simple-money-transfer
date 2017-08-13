@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 
 import test.adanielssr.simple.money.transfer.business.service.exceptions.SimpleMoneyTransferException;
+import test.adanielssr.simple.money.transfer.business.service.exceptions.TransferValidationException;
 import test.adanielssr.simple.money.transfer.domain.model.Account;
 import test.adanielssr.simple.money.transfer.domain.model.Transfer;
 import test.adanielssr.simple.money.transfer.domain.model.TransferStatus;
@@ -107,19 +108,20 @@ public class TransferService {
             throw new SimpleMoneyTransferException("Transfer object needed!");
         }
         if (transfer.getAccountNumberFrom() == null) {
-            throw new SimpleMoneyTransferException("accountNumberFrom needed!");
+            throw new TransferValidationException("accountNumberFrom needed!");
         }
         if (transfer.getAccountNumberTo() == null) {
-            throw new SimpleMoneyTransferException("accountNumberTo needed!");
-        }
-        if (transfer.getAccountNumberFrom().longValue() == transfer.getAccountNumberTo().longValue()) {
-            throw new SimpleMoneyTransferException("Cannot perform transfer in the same account!");
+            throw new TransferValidationException("accountNumberTo needed!");
         }
         if (transfer.getAmount() == null) {
-            throw new SimpleMoneyTransferException("amount needed!");
+            throw new TransferValidationException("amount needed!");
+        }
+
+        if (transfer.getAccountNumberFrom().longValue() == transfer.getAccountNumberTo().longValue()) {
+            throw new TransferValidationException("Cannot perform transfer in the same account!");
         }
         if (transfer.getAmount() <= 0.0D) {
-            throw new SimpleMoneyTransferException("amount must be greater than 0.0!");
+            throw new TransferValidationException("amount must be greater than 0.0!");
         }
     }
 }

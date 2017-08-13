@@ -8,6 +8,7 @@ import org.mockito.ArgumentCaptor;
 
 import test.adanielssr.simple.money.transfer.business.service.exceptions.AccountNotFoundException;
 import test.adanielssr.simple.money.transfer.business.service.exceptions.SimpleMoneyTransferException;
+import test.adanielssr.simple.money.transfer.business.service.exceptions.TransferValidationException;
 import test.adanielssr.simple.money.transfer.domain.model.Account;
 import test.adanielssr.simple.money.transfer.domain.model.Transfer;
 
@@ -36,12 +37,12 @@ public class TransferServiceTest {
         transferService.createAndPerformTransfer(null);
     }
 
-    @Test(expected = SimpleMoneyTransferException.class)
+    @Test(expected = TransferValidationException.class)
     public void createAndPerformTransferWithNullFromAccount() {
         transferService.createAndPerformTransfer(new Transfer());
     }
 
-    @Test(expected = SimpleMoneyTransferException.class)
+    @Test(expected = TransferValidationException.class)
     public void createAndPerformTransferWithNullToAccount() {
         Transfer transfer = new Transfer();
         transfer.setAccountNumberFrom(1L);
@@ -49,16 +50,7 @@ public class TransferServiceTest {
         transferService.createAndPerformTransfer(transfer);
     }
 
-    @Test(expected = SimpleMoneyTransferException.class)
-    public void createAndPerformTransferWithSameAccount() {
-        Transfer transfer = new Transfer();
-        transfer.setAccountNumberFrom(1L);
-        transfer.setAccountNumberTo(1L);
-
-        transferService.createAndPerformTransfer(transfer);
-    }
-
-    @Test(expected = SimpleMoneyTransferException.class)
+    @Test(expected = TransferValidationException.class)
     public void createAndPerformTransferWithNullAmount() {
         Transfer transfer = new Transfer();
         transfer.setAccountNumberFrom(1L);
@@ -67,7 +59,17 @@ public class TransferServiceTest {
         transferService.createAndPerformTransfer(transfer);
     }
 
-    @Test(expected = SimpleMoneyTransferException.class)
+    @Test(expected = TransferValidationException.class)
+    public void createAndPerformTransferWithSameAccount() {
+        Transfer transfer = new Transfer();
+        transfer.setAccountNumberFrom(1L);
+        transfer.setAccountNumberTo(1L);
+        transfer.setAmount(1.0D);
+
+        transferService.createAndPerformTransfer(transfer);
+    }
+
+    @Test(expected = TransferValidationException.class)
     public void createAndPerformTransferWithLessOrEqualToZeroAmount() {
         Transfer transfer = new Transfer();
         transfer.setAccountNumberFrom(1L);
