@@ -1,5 +1,7 @@
 package test.adanielssr.simple.money.transfer.domain.model;
 
+import java.util.Date;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -18,6 +20,8 @@ public class Transfer {
     private Long accountNumberTo;
 
     private Double amount;
+
+    private Date transferTimestamp;
 
     private TransferStatus status;
 }

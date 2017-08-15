@@ -8,6 +8,7 @@ import test.adanielssr.simple.money.transfer.business.service.AccountService;
 import test.adanielssr.simple.money.transfer.business.service.TransferService;
 import test.adanielssr.simple.money.transfer.business.service.exceptions.AccountAlreadyExistsException;
 import test.adanielssr.simple.money.transfer.business.service.exceptions.AccountNotFoundException;
+import test.adanielssr.simple.money.transfer.business.service.exceptions.NotEnoughBalanceException;
 import test.adanielssr.simple.money.transfer.business.service.exceptions.SimpleMoneyTransferException;
 import test.adanielssr.simple.money.transfer.business.service.exceptions.TransferValidationException;
 import test.adanielssr.simple.money.transfer.domain.model.Account;
@@ -70,10 +71,13 @@ public class AccountController {
             transfer.setAccountNumberFrom(accountNumber);
 
             try {
-                jsonHttpResponse.end(Json.encodePrettily(transferService.createAndPerformTransfer(transfer)));
+                jsonHttpResponse.setStatusCode(HttpResponseStatus.CREATED.code())
+                        .end(Json.encodePrettily(transferService.createAndPerformTransfer(transfer)));
             } catch (AccountNotFoundException e) {
                 jsonHttpResponse.setStatusCode(HttpResponseStatus.NOT_FOUND.code())
                         .end(createJsonError(e.getMessage()));
+            } catch (NotEnoughBalanceException e) {
+                jsonHttpResponse.setStatusCode(HttpResponseStatus.CONFLICT.code()).end(createJsonError(e.getMessage()));
             } catch (TransferValidationException e) {
                 jsonHttpResponse.setStatusCode(HttpResponseStatus.BAD_REQUEST.code())
                         .end(createJsonError(e.getMessage()));

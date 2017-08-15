@@ -2,11 +2,13 @@ package test.adanielssr.simple.money.transfer.business.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 
+import test.adanielssr.simple.money.transfer.business.service.exceptions.NotEnoughBalanceException;
 import test.adanielssr.simple.money.transfer.business.service.exceptions.SimpleMoneyTransferException;
 import test.adanielssr.simple.money.transfer.business.service.exceptions.TransferValidationException;
 import test.adanielssr.simple.money.transfer.domain.model.Account;
@@ -50,17 +52,18 @@ public class TransferService {
     public Transfer createAndPerformTransfer(Transfer transfer) {
         validateTransfer(transfer);
 
-        //initialise transfer
-        transfer.setTransferNumber(transferNumberIncrementer.incrementAndGet());
-        transfer.setStatus(TransferStatus.REGISTERED);
-
-        //stores transfer on a registered state
-        mapTransferNumberToTransfer.putIfAbsent(transfer.getTransferNumber(), transfer);
-
         // get accounts from account Service
         Account transferFrom = accountService.getAccountByNumber(transfer.getAccountNumberFrom());
 
         Account transferTo = accountService.getAccountByNumber(transfer.getAccountNumberTo());
+
+        //initialise transfer
+        transfer.setTransferNumber(transferNumberIncrementer.incrementAndGet());
+        transfer.setStatus(TransferStatus.REGISTERED);
+        transfer.setTransferTimestamp(new Date());
+
+        //stores transfer on a registered state
+        mapTransferNumberToTransfer.putIfAbsent(transfer.getTransferNumber(), transfer);
 
         final BigDecimal transferAmount = new BigDecimal(transfer.getAmount());
 
@@ -91,16 +94,20 @@ public class TransferService {
     }
 
     private void updateFromAccount(Account transferFrom, BigDecimal transferAmount) {
-        BiFunction<Long, Account, Account> substractOperation = (aAccountNumber, existing) -> {
+        BiFunction<Long, Account, Account> subtractOperation = (aAccountNumber, existing) -> {
             BigDecimal currentFromBalance = new BigDecimal(existing.getBalance());
             BigDecimal fromAccountResult = currentFromBalance.subtract(transferAmount)
                     .setScale(DEFAULT_SCALE, RoundingMode.HALF_UP);
+
+            if (fromAccountResult.doubleValue() < 0.0D) {
+                throw new NotEnoughBalanceException(aAccountNumber);
+            }
 
             existing.setBalance(fromAccountResult.doubleValue());
 
             return existing;
         };
-        accountService.performAccountOperation(transferFrom.getAccountNumber(), substractOperation);
+        accountService.performAccountOperation(transferFrom.getAccountNumber(), subtractOperation);
     }
 
     private void validateTransfer(Transfer transfer) {
