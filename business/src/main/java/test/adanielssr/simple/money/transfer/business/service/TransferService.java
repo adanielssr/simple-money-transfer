@@ -47,6 +47,7 @@ public class TransferService {
      * @param transfer the transfer
      * @return the created transfer
      * @throws SimpleMoneyTransferException                                                               if the input transfer is not valid
+     * @throws NotEnoughBalanceException                                                                  if the account from what this transfer is supposed to come from doesn't have enough balance to make it.
      * @throws test.adanielssr.simple.money.transfer.business.service.exceptions.AccountNotFoundException if some of the given accountNumber does not exist
      */
     public Transfer createAndPerformTransfer(Transfer transfer) {

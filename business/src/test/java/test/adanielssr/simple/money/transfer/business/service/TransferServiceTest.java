@@ -7,12 +7,15 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import test.adanielssr.simple.money.transfer.business.service.exceptions.AccountNotFoundException;
+import test.adanielssr.simple.money.transfer.business.service.exceptions.NotEnoughBalanceException;
 import test.adanielssr.simple.money.transfer.business.service.exceptions.SimpleMoneyTransferException;
 import test.adanielssr.simple.money.transfer.business.service.exceptions.TransferValidationException;
 import test.adanielssr.simple.money.transfer.domain.model.Account;
 import test.adanielssr.simple.money.transfer.domain.model.Transfer;
+import test.adanielssr.simple.money.transfer.domain.model.TransferStatus;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
@@ -98,6 +101,61 @@ public class TransferServiceTest {
     }
 
     @Test
+    public void createAndPerformTransferWithPerformError() {
+        Transfer transfer = createValidTransfer();
+        transfer.setAmount(10.0D);
+
+        Account accountFrom = createAccountFrom();
+
+        Account accountTo = createAccountTo();
+
+        when(accountService.getAccountByNumber(anyLong())).thenReturn(accountFrom, accountTo);
+
+        doThrow(ArrayStoreException.class).when(accountService).performAccountOperation(any(), any());
+
+        try {
+            transferService.createAndPerformTransfer(transfer);
+        } catch (ArrayStoreException e) {
+            assertEquals(1, transferService.getMapTransferNumberToTransfer().size());
+            Transfer createdTransfer = transferService.getMapTransferNumberToTransfer().entrySet().iterator().next()
+                    .getValue();
+            assertNotNull(createdTransfer);
+            assertNotNull(createdTransfer.getTransferNumber());
+            assertNotNull(createdTransfer.getTransferTimestamp());
+            assertEquals(accountFrom.getAccountNumber(), createdTransfer.getAccountNumberFrom());
+            assertEquals(accountTo.getAccountNumber(), createdTransfer.getAccountNumberTo());
+            assertEquals(TransferStatus.REGISTERED, createdTransfer.getStatus());
+        }
+    }
+
+    @Test(expected = NotEnoughBalanceException.class)
+    public void createAndPerformTransferWithNotEnoughBalance() {
+        ArgumentCaptor<BiFunction> operationCaptor = ArgumentCaptor.forClass(BiFunction.class);
+        ArgumentCaptor<Long> accountNumberCaptor = ArgumentCaptor.forClass(Long.class);
+
+        Transfer transfer = createValidTransfer();
+        transfer.setAmount(10.005D);
+
+        Account accountFrom = createAccountFrom();
+
+        Account accountTo = createAccountTo();
+
+        when(accountService.getAccountByNumber(anyLong())).thenReturn(accountFrom, accountTo);
+
+        doNothing().when(accountService)
+                .performAccountOperation(accountNumberCaptor.capture(), operationCaptor.capture());
+
+        transferService.createAndPerformTransfer(transfer);
+
+        assertEquals(2, accountNumberCaptor.getAllValues().size());
+        assertEquals(2, operationCaptor.getAllValues().size());
+
+        BiFunction firstAccountOperation = operationCaptor.getAllValues().get(0);
+
+        firstAccountOperation.apply(accountFrom.getAccountNumber(), accountFrom);
+    }
+
+    @Test
     public void createAndPerformTransfer() {
         ArgumentCaptor<BiFunction> operationCaptor = ArgumentCaptor.forClass(BiFunction.class);
         ArgumentCaptor<Long> accountNumberCaptor = ArgumentCaptor.forClass(Long.class);
@@ -114,8 +172,14 @@ public class TransferServiceTest {
         doNothing().when(accountService)
                 .performAccountOperation(accountNumberCaptor.capture(), operationCaptor.capture());
 
-        transferService.createAndPerformTransfer(transfer);
+        Transfer createdTransfer = transferService.createAndPerformTransfer(transfer);
+        assertNotNull(createdTransfer);
+        assertNotNull(createdTransfer.getTransferNumber());
+        assertNotNull(createdTransfer.getTransferTimestamp());
+        assertEquals(accountFrom.getAccountNumber(), createdTransfer.getAccountNumberFrom());
+        assertEquals(accountTo.getAccountNumber(), createdTransfer.getAccountNumberTo());
 
+        //method call twice the perform operation so it shall have
         assertEquals(2, accountNumberCaptor.getAllValues().size());
         assertEquals(2, operationCaptor.getAllValues().size());
 
@@ -124,14 +188,16 @@ public class TransferServiceTest {
 
         BiFunction firstAccountOperation = operationCaptor.getAllValues().get(0);
 
-        Account resultAccountOne = (Account) firstAccountOperation.apply(accountFrom.getAccountNumber(), createAccountFrom());
+        Account resultAccountOne = (Account) firstAccountOperation
+                .apply(accountFrom.getAccountNumber(), createAccountFrom());
 
-        assertEquals((Double)0.0D, resultAccountOne.getBalance());
+        assertEquals((Double) 0.0D, resultAccountOne.getBalance());
 
         BiFunction secondAccountOperation = operationCaptor.getAllValues().get(1);
 
-        Account resultAccountTwo = (Account) secondAccountOperation.apply(accountTo.getAccountNumber(), createAccountTo());
-        assertEquals((Double)10.0D, resultAccountTwo.getBalance());
+        Account resultAccountTwo = (Account) secondAccountOperation
+                .apply(accountTo.getAccountNumber(), createAccountTo());
+        assertEquals((Double) 10.0D, resultAccountTwo.getBalance());
     }
 
     private Account createAccountFrom() {
@@ -140,7 +206,6 @@ public class TransferServiceTest {
         accountFrom.setBalance(10.0D);
         return accountFrom;
     }
-
 
     private Account createAccountTo() {
         Account accountTo = new Account();
