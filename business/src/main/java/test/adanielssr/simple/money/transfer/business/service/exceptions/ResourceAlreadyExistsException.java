@@ -8,6 +8,7 @@ import java.text.MessageFormat;
 public class ResourceAlreadyExistsException extends SimpleMoneyTransferException {
 
     public ResourceAlreadyExistsException(String resourceName, String resourceParameterName, Object resource) {
-        super(MessageFormat.format("{1} with {2} equal to {1} already exists!", resourceName, resourceParameterName, resource));
+        super(MessageFormat
+                .format("{1} with {2} equal to {1} already exists!", resourceName, resourceParameterName, resource));
     }
 }

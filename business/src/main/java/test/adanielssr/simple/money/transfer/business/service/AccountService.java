@@ -27,7 +27,7 @@ public class AccountService {
      *
      * @param newAccount account with the optional account number and account balance
      * @return created account
-     * @throws SimpleMoneyTransferException if the account parameter is not valid
+     * @throws SimpleMoneyTransferException  if the account parameter is not valid
      * @throws AccountAlreadyExistsException if the account number given is already assigned to an existing account
      */
     public Account createAccount(Account newAccount) {
@@ -51,6 +51,7 @@ public class AccountService {
 
     /**
      * Retrieve all stored accounts
+     *
      * @return the collection of Accounts
      */
     public Collection<Account> getAllAccounts() {
@@ -63,7 +64,7 @@ public class AccountService {
      * @param accountNumber the account number of the account to search for
      * @return the found account
      * @throws SimpleMoneyTransferException if the account number is invalid
-     * @throws AccountNotFoundException if no account with the given account number exists in the store
+     * @throws AccountNotFoundException     if no account with the given account number exists in the store
      */
     public Account getAccountByNumber(Long accountNumber) {
         if (accountNumber == null) {
@@ -82,7 +83,7 @@ public class AccountService {
      * The operation is done if the acconu
      *
      * @param accountNumber the account number
-     * @param operation function where the first argument is the account Number the second argument is the
+     * @param operation     function where the first argument is the account Number the second argument is the
      */
     public void performAccountOperation(Long accountNumber, BiFunction<Long, Account, Account> operation) {
         if (accountNumber == null) {

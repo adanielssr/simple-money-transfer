@@ -29,7 +29,8 @@ public class MoneyTransferVerticle extends AbstractVerticle {
 
     private void createRouting(Router router) {
         AccountService accountService = new AccountService();
-        AccountController accountController = new AccountController(accountService, new TransferService(accountService));
+        AccountController accountController = new AccountController(accountService,
+                new TransferService(accountService));
 
         router.get("/accounts").handler(accountController::getAllAccounts);
         router.route("/accounts*").handler(BodyHandler.create());

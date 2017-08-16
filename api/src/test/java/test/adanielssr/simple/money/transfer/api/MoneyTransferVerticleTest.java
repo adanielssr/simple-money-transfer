@@ -66,6 +66,36 @@ public class MoneyTransferVerticleTest {
         vertx.close();
     }
 
+    private static void assertAccountsSize(HttpClient httpClient, int size) throws InterruptedException {
+        CountDownLatch assertLatch = new CountDownLatch(1);
+        AtomicInteger status = new AtomicInteger();
+
+        httpClient.getNow(port, LOCALHOST, "/accounts", response -> {
+            status.set(response.statusCode());
+
+            if (HttpResponseStatus.OK.code() == response.statusCode()) {
+                response.handler(body -> {
+                    List<Account> accounts = Json.decodeValue(body.toString(), List.class);
+                    assertNotNull(accounts);
+                    assertEquals(size, accounts.size());
+
+                    assertLatch.countDown();
+                });
+            } else {
+                assertLatch.countDown();
+            }
+        });
+
+        waitForLatch(assertLatch);
+
+        assertEquals(HttpResponseStatus.OK.code(), status.get());
+    }
+
+    private static void waitForLatch(CountDownLatch assertLatch) throws InterruptedException {
+        assertLatch.await(TIMEOUT, TimeUnit.SECONDS);
+        assertEquals(0, assertLatch.getCount());
+    }
+
     @Before
     public void setUp(TestContext context) {
         DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
@@ -361,35 +391,5 @@ public class MoneyTransferVerticleTest {
         assertEquals(expectedStatus, status.get());
 
         return retrievedAccount[0];
-    }
-
-    private static void assertAccountsSize(HttpClient httpClient, int size) throws InterruptedException {
-        CountDownLatch assertLatch = new CountDownLatch(1);
-        AtomicInteger status = new AtomicInteger();
-
-        httpClient.getNow(port, LOCALHOST, "/accounts", response -> {
-            status.set(response.statusCode());
-
-            if (HttpResponseStatus.OK.code() == response.statusCode()) {
-                response.handler(body -> {
-                    List<Account> accounts = Json.decodeValue(body.toString(), List.class);
-                    assertNotNull(accounts);
-                    assertEquals(size, accounts.size());
-
-                    assertLatch.countDown();
-                });
-            } else {
-                assertLatch.countDown();
-            }
-        });
-
-        waitForLatch(assertLatch);
-
-        assertEquals(HttpResponseStatus.OK.code(), status.get());
-    }
-
-    private static void waitForLatch(CountDownLatch assertLatch) throws InterruptedException {
-        assertLatch.await(TIMEOUT, TimeUnit.SECONDS);
-        assertEquals(0, assertLatch.getCount());
     }
 }
